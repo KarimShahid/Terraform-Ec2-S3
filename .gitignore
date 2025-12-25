@@ -1,8 +1,20 @@
-# Local Terraform files
-*.tfstate
-*.tfstate.backup
+# Terraform directories and files
 .terraform/
 .terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfvars # sensitive variables like key names
 
-# CLI configuration files
-*.tfvars
+
+# CLI configuration
+.terraformrc
+terraform.rc
+
+# Mac OS metadata
+.DS_Store
+
+# Optional: editor / IDE files
+*.swp
+*.swo
+.vscode/
+.idea/

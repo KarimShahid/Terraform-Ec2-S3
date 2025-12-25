@@ -30,12 +30,12 @@ data "aws_vpc" "default_vpc" {
 
 # Using existing subnet
 data "aws_subnet" "default_subnet" {
-  id = "subnet-0591baba4adf985b9"
+  id = var.subnet_id
 }
 
 # Using existing secuirty group
 data "aws_security_group" "default_sg" {
-  id = "sg-05dbbd278e09a6b2b"
+  id = var.sg_id
 }
 
 ##################################################################
@@ -46,21 +46,23 @@ data "aws_security_group" "default_sg" {
 ######### main ec2 resource ##############
 resource "aws_instance" "shahid_ec2" {
   ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = "t3.micro"
-  key_name               = "awsKeyPair"
+  instance_type          = var.instance_type
+  key_name               = var.key_name
   subnet_id              = data.aws_subnet.default_subnet.id
   vpc_security_group_ids = [data.aws_security_group.default_sg.id]
 
-  tags = {
-    Name      = "terraform-shahid-ec2"
-    ManagedBy = "Terraform"
-  }
-
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "terraform-shahid-ec2"
+    }
+  )
 }
 
 ######### Attaching EIP to the instance #############
 resource "aws_eip" "shahid_eip" {
   instance = aws_instance.shahid_ec2.id
+  domain = "vpc"
 }
 
 ##################################################################
@@ -70,12 +72,15 @@ resource "aws_eip" "shahid_eip" {
 
 ########### Log Bucket ###########
 resource "aws_s3_bucket" "log_bucket" {
-  bucket = "secure-bucket-logs-karim-2025-12-23"
+  bucket = var.log_bucket_name
+  force_destroy = true
 
-  tags = {
-    Name      = "S3-Logs"
-    ManagedBy = "Terraform"
-  }
+  tags = merge(
+    var.common_tags,
+    {
+    Name= "S3-Logs"
+    }
+  )
 }
 
 # Object Ownership
@@ -103,7 +108,7 @@ resource "aws_s3_bucket_versioning" "log_bucket" {
   bucket = aws_s3_bucket.log_bucket.id
 
   versioning_configuration {
-    status = "Enabled"
+    status = var.versioning_status
   }
 }
 
@@ -121,12 +126,15 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "log_bucket" {
 
 ########### Secure Bucket ###########
 resource "aws_s3_bucket" "secure_bucket" {
-  bucket = "secure-bucket-karim-2025-12-23"
-
-  tags = {
-    Name      = "S3-Secure"
-    ManagedBy = "Terraform"
-  }
+  bucket = var.secure_bucket_name
+  force_destroy = true
+  
+  tags = merge(
+    var.common_tags,
+    {
+      Name= "S3-Secure"
+    }
+  )
 }
 
 # Server access logging
@@ -161,7 +169,7 @@ resource "aws_s3_bucket_versioning" "secure_bucket" {
   bucket = aws_s3_bucket.secure_bucket.id
 
   versioning_configuration {
-    status = "Enabled"
+    status = var.versioning_status
   }
 }
 

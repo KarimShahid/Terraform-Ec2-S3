@@ -4,22 +4,9 @@ This Terraform project provisions an **EC2 instance** and **secure S3 buckets** 
 
 ## Project Structure
 
-.
-├── main.tf                  # Root Terraform configuration calling modules
-├── providers.tf             # AWS provider configuration
-├── variables.tf             # Root-level variables
-├── outputs.tf               # Root-level outputs
-├── terraform.tfvars         # Values for variables
-├── modules
-│   ├── ec2                  # EC2 module
-│   │   ├── main.tf
-│   │   ├── outputs.tf
-│   │   └── variables.tf
-│   └── s3                   # S3 module
-│       ├── main.tf
-│       ├── outputs.tf
-│       └── variables.tf
-└── readme.md
+![Terraform EC2 + S3 Architecture](images/tree.png)
+
+<br>
 
 ## Modules
 

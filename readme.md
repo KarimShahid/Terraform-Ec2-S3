@@ -1,58 +1,93 @@
-# Terraform EC2 + S3 Project
+# Terraform EC2 + S3 Modules
 
-This Terraform project deploys an **AWS EC2 instance**, an **Elastic IP (EIP)**, and two **S3 buckets** (log bucket and secure bucket) with proper security and configuration. The EC2 instance uses the latest Amazon Linux 2023 AMI, is attached to an existing VPC, subnet, and security group, and has an EIP. The S3 buckets include a log bucket and a secure bucket with server access logging, enforced object ownership, block public access settings, versioning, server-side encryption (AES256), and a bucket policy enforcing HTTPS and encrypted uploads.
+This Terraform project provisions an **EC2 instance** and **secure S3 buckets** on AWS using a **modular approach**.  
 
 ## Project Structure
-```
-ec2+s3/
-├── main.tf                  # Terraform configuration
-├── .gitignore               # Ignore Terraform state and sensitive files
-```
 
-## Prerequisites
-- Terraform CLI
-- AWS account with configured access keys
-- Existing VPC, subnet, and security group IDs
+.
+├── main.tf                  # Root Terraform configuration calling modules
+├── providers.tf             # AWS provider configuration
+├── variables.tf             # Root-level variables
+├── outputs.tf               # Root-level outputs
+├── terraform.tfvars         # Values for variables
+├── modules
+│   ├── ec2                  # EC2 module
+│   │   ├── main.tf
+│   │   ├── outputs.tf
+│   │   └── variables.tf
+│   └── s3                   # S3 module
+│       ├── main.tf
+│       ├── outputs.tf
+│       └── variables.tf
+└── readme.md
 
-## Getting Started
-1. Clone the repository (or navigate to your local folder):
-```bash
-git clone git@github.com:KarimShahid/Terraform-learning.git
-cd devops-bootcamp/week6/day2/ec2+s3
-```
-2. Initialize Terraform:
-```bash
+## Modules
+
+### 1. EC2 Module (\`modules/ec2\`)
+
+- Launches an EC2 instance
+- Attaches an Elastic IP (EIP)
+- Accepts the following variables:
+  - \`instance_type\` – EC2 instance type (\`t2.micro\` or \`t3.micro\`)
+  - \`key_name\` – SSH key pair
+  - \`subnet_id\` – Subnet where EC2 is launched
+  - \`sg_id\` – Security group ID
+  - \`common_tags\` – Tags applied to all resources
+- Outputs:
+  - \`instance_id\`
+  - \`eip\`
+  - \`ec2_public_dns\`
+
+### 2. S3 Module (\`modules/s3\`)
+
+- Creates two S3 buckets:
+  - **Log bucket** (for storing access logs)
+  - **Secure bucket** (main bucket with logging, versioning, encryption, public access block, and bucket policy)
+- Accepts the following variables:
+  - \`log_bucket_name\` – Name for log bucket
+  - \`secure_bucket_name\` – Name for secure bucket
+  - \`versioning_status\` – \`Enabled\` or \`Suspended\`
+  - \`common_tags\` – Tags applied to all resources
+- Outputs:
+  - \`log_bucket_name\`
+  - \`secure_bucket_name\`
+
+## Root Configuration
+
+- Calls both EC2 and S3 modules
+- Defines provider configuration in \`providers.tf\`
+- Defines root-level variables and outputs
+- Root-level \`terraform.tfvars\` provides actual values
+
+## Usage
+
+1. Initialize Terraform:
+
+\`\`\`bash
 terraform init
-```
-3. Check formatting:
-```bash
-terraform fmt --check
-```
-4. Validate configuration:
-```bash
-terraform validate
-```
-5. Preview changes:
-```bash
+\`\`\`
+
+2. Preview the execution plan:
+
+\`\`\`bash
 terraform plan
-```
-6. Apply the configuration:
-```bash
+\`\`\`
+
+3. Apply the configuration:
+
+\`\`\`bash
 terraform apply
-```
-Type `yes` to confirm. Terraform will create the EC2, EIP, and S3 buckets.
+\`\`\`
 
-## Cleanup
-To remove all resources created by this project:
-```bash
-terraform destroy
-```
+4. Access outputs:
 
-## Notes
-- Terraform state files (`terraform.tfstate`) are ignored in Git to protect sensitive information.
-- Ensure bucket names are globally unique if reusing this template.
-- You can modify AMI, instance type, and bucket names in `main.tf` as needed.
+\`\`\`bash
+terraform output
+\`\`\`
 
-## Author
-**Shahid Karim**  
+## Notes / Best Practices
 
+- \`.tfstate\`, \`.tfstate.backup\`, and \`.terraform/\` are **not committed** to Git.  
+- Bucket names must be globally unique.  
+- Modules allow for **reusability and cleaner structure**.  
+- Update \`terraform.tfvars\` for environment-specific configurations.  
